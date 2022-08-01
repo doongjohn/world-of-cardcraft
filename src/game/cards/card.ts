@@ -179,7 +179,6 @@ export class CardObj {
   }
 }
 
-// TODO: make Board Obj
 export class BoardObj {
   card: Card
   static size = {

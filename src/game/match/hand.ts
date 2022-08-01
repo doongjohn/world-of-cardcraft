@@ -48,17 +48,15 @@ export class HandUi {
       }
     })
 
+    // reset selection when click empty space
     GameMatch.scene.input.on('pointerdown', () => {
       if (GameMatch.turnPlayer != owner.index) return
-      if (
-        Selection.selected.cardObj.length == 0 ||
-        !this.cardObjs.includes(Selection.hovering.cardObj)
-      ) {
-        if (!HandUiAction.hovering) {
-          Selection.clearSelectCardObj()
-          this.update()
-          HandUiAction.destroy()
-        }
+      const cardObjHoveringOrSelected =
+        Selection.selected.cardObj.length > 0 || this.cardObjs.includes(Selection.hovering.cardObj)
+      if (!cardObjHoveringOrSelected && !HandUiAction.hovering) {
+        Selection.clearSelectCardObj()
+        this.update()
+        HandUiAction.destroy()
       }
     })
   }
@@ -68,11 +66,11 @@ export class HandUi {
       cardObj.container.setVisible(value)
     }
 
-    // update ui when true
     if (value) {
+      // show
       this.update()
     } else {
-      // NOTE: disable other hand ui elements
+      // hide
       HandUiAction.destroy()
     }
   }
@@ -187,7 +185,6 @@ export class HandUiAction {
         const scene: Scenes.Match = items.scene
         return scene.rexUI.add.roundRectangle(0, 0, 2, 2, 0, 0x212121)
       },
-      // createButtonCallback: function(item: any, i: number, items: any[]) {
       createButtonCallback: function(item: any) {
         const scene: Scenes.Match = item.scene
         return scene.rexUI.add.label({
@@ -195,13 +192,11 @@ export class HandUiAction {
           text: scene.add.text(0, 0, item.name, {
             fontSize: '20px',
           }),
-          // icon: scene.rexUI.add.roundRectangle(0, 0, 0, 0, 10, 0xffffff),
           space: {
             left: 10,
             right: 10,
             top: 10,
             bottom: 10,
-            // icon: 10,
           },
         })
       },
@@ -262,8 +257,11 @@ export class HandUiAction {
     })
 
     // TODO: press esc to cancel summon
+    // TODO: make user unable to select or unselect cardObj
+    // TODO: make user unable to end turn
 
     const handler = (x: number, y: number) => {
+      // TODO: (longterm) impl full summon sequence
       // 1. send selected card to the limbo
       // 2. negate summon trigger
       // 3. actually summon (if negated send to the graveyard)
@@ -276,11 +274,6 @@ export class HandUiAction {
       // 4. on summon trigger
     }
     GameMatch.scene.events.on('selection.select.tile', handler)
-
-    // TODO: do this!
-    // listen to on select event
-    //   - do summon
-    //   - unregister select event
   }
   static actionSpecialSummon() {}
   static actionSet() {}

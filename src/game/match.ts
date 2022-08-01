@@ -13,7 +13,7 @@ export const players: Player[] = []
 export const board: BoardObj[][] = []
 export const cards: Card[][] = []
 export const hands: Hand[] = []
-export const limbo: Card[] = []
+export const limbo: Card[] = [] // TODO: make limbo zone
 // decks
 // side decks
 // graveyards
@@ -73,6 +73,7 @@ export function initPlayers() {
 export function initBoard(scene: Phaser.Scene) {
   grid = new Grid.Grid(scene)
 
+  // init board
   for (let y = 0; y < Grid.h; ++y) {
     board[y] = []
     for (let x = 0; x < Grid.w; ++x) {
@@ -80,7 +81,7 @@ export function initBoard(scene: Phaser.Scene) {
     }
   }
 
-  // TODO: init commander card
+  // init commander cards
   Board.createObj(1, 3, cards[0][0])
   Board.createObj(9, 3, cards[1][0])
 }

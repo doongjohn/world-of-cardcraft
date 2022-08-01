@@ -1,0 +1,23 @@
+{
+  "name": "@example/basics",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.30.4",
+    "@typescript-eslint/parser": "^5.30.4",
+    "astro": "^1.0.0-beta.58",
+    "eslint": "^8.19.0",
+    "eslint-config-prettier": "^8.5.0"
+  },
+  "dependencies": {
+    "phaser": "^3.55.2",
+    "phaser3-rex-plugins": "^1.1.71",
+    "phaser3-rex-plugins-types": "^0.2.0"
+  }
+}

@@ -12,7 +12,7 @@ function main() {
     },
     width: Game.w,
     height: Game.h,
-    backgroundColor: '#96e0ff',
+    backgroundColor: '#65a4db',
     scene: [Scenes.Match],
     plugins: {
       scene: [

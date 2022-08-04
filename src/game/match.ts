@@ -5,6 +5,7 @@ import { Player } from './player'
 import { Board } from './match/board'
 import { BoardObj, Card } from './cards/card'
 import { Hand } from './match/hand'
+import { Label, Buttons } from 'phaser3-rex-plugins/templates/ui/ui-components.js'
 
 export let scene: Scenes.Match
 export let turnPlayer = 0
@@ -21,36 +22,6 @@ export const hands: Hand[] = []
 // pactzones
 // timestreams
 // voids (banish)
-
-// TODO: make game phase
-// 게임 시작 전:
-// -> 사이드보딩
-// -> 선/후 턴 플레이어 결정
-// -> 패 5장 드로우
-// -> 플레이어가 팩트카드 1장 원하는 것 선택 후 무조건 플레이
-
-// 턴 구조: (all phase must be ended by a player input)
-// -> untap all cards
-// -> 드로우 페이즈
-//   -> 일반 드로우 1장
-// -> Stand-by Phase
-//   -> player can only activate quick effect
-// -> Main Phase
-//   -> You can Place 1 Pact to the Pact zone
-//   -> You can do Main Phase things (summon, activate, etc...)
-//   -> You can enter the End Phase
-// -> Battle Phase
-//   -> You can do Battle Phase things (move, attack, quick effect)
-//   -> You can't directly go to the end phase (unless there is an effect that blocks you from entering MP2)
-// -> Main Phase 2
-//   -> You cannot enter MP2 if you have not conducted your Battle Phase.
-//   -> You can do Main Phase things
-//   -> You can enter the End Phase
-// -> End Phase
-//
-// - Attack
-// - Counter Attack
-// - health can be minus
 
 export function initScene(matchScene: Scenes.Match) {
   scene = matchScene
@@ -98,7 +69,7 @@ export function initPlayers() {
   setTurnPlayer(0)
 }
 
-export function initBoard(scene: Phaser.Scene) {
+export function initBoard() {
   grid = new Grid.Grid(scene)
 
   // init board
@@ -113,3 +84,129 @@ export function initBoard(scene: Phaser.Scene) {
   Board.createObj(1, 3, cards[0][0])
   Board.createObj(9, 3, cards[1][0])
 }
+
+/* TODO: make game phase
+게임 시작 전:
+-> 사이드보딩
+-> 선/후 턴 플레이어 결정
+-> 패 5장 드로우
+-> 플레이어가 팩트카드 1장 원하는 것 선택 후 무조건 플레이
+
+턴 구조: (all phase must be ended by a player input)
+-> untap all cards
+-> 드로우 페이즈
+  -> 일반 드로우 1장
+-> Stand-by Phase
+  -> player can only activate quick effect
+-> Main Phase
+  -> You can Place 1 Pact to the Pact zone
+  -> You can do Main Phase things (summon, activate, etc...)
+  -> You can enter the End Phase
+-> Battle Phase
+  -> You can do Battle Phase things (move, attack, quick effect)
+  -> You can't directly go to the end phase (unless there is an effect that blocks you from entering MP2)
+-> Main Phase 2
+  -> You cannot enter MP2 if you have not conducted your Battle Phase.
+  -> You can do Main Phase things
+  -> You can enter the End Phase
+-> End Phase
+
+- Attack
+- Counter Attack
+- health can be minus
+*/
+export enum Phase {
+  Draw,
+  StandBy,
+  Main1,
+  Battle,
+  Main2,
+  End,
+}
+export enum Step {
+  None,
+  Draw,
+  Battle,
+  Damage,
+}
+
+export let phase = Phase.Draw
+export let step = Step.None
+
+export const skips = new Set<Phase>()
+export function skipPhase(value: Phase) {
+  skips.add(value)
+}
+
+export function nextPhase() {
+  // on phase end event
+  console.log('phase end: ' + Phase[phase])
+  for (;;) {
+    phase = (phase + 1) % 6
+    if (skips.has(phase)) {
+      skips.delete(phase)
+      continue
+    }
+    break
+  }
+
+  if (phase == Phase.Draw) {
+    // change turn player
+    setTurnPlayer((turnPlayer + 1) % 2)
+  }
+
+  // on phase start event
+  console.log('phase start: ' + Phase[phase])
+}
+export function setStep(value: Step) {
+  step = value
+}
+
+export class PhaseUi {
+  endPhaseLabel: Label
+  endPhaseButtons: Buttons
+
+  init() {
+    this.endPhaseLabel = this.createLabel()
+    this.endPhaseButtons = scene.rexUI.add
+      .buttons({
+        buttons: [this.endPhaseLabel],
+        click: {
+          mode: 'pointerup',
+        },
+      })
+      .setAnchor({
+        right: '98%',
+        centerY: '50%',
+      })
+      .layout()
+
+    // NOTE: https://codepen.io/rexrainbow/pen/eYvxqLJ?editors=0010
+    // buttons.setButtonEnable(false)
+    this.endPhaseButtons
+      .on('button.click', function() {
+        nextPhase()
+      })
+      .on('button.over', function(button: any) {
+        button.getElement('background').setStrokeStyle(2, 0xffffff)
+      })
+      .on('button.out', function(button: any) {
+        button.getElement('background').setStrokeStyle()
+      })
+  }
+  createLabel() {
+    return scene.rexUI.add.label({
+      width: 100,
+      height: 40,
+      background: scene.rexUI.add.roundRectangle(0, 0, 0, 0, 0, 0x212121),
+      text: scene.add.text(0, 0, 'End Phase', {
+        fontSize: '18px',
+      }),
+      space: {
+        left: 10,
+        right: 10,
+      },
+    })
+  }
+}
+export const phaseUi = new PhaseUi()

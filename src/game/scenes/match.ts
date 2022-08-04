@@ -19,7 +19,8 @@ export class Match extends Phaser.Scene {
 
   create() {
     GameMatch.initPlayers()
-    GameMatch.initBoard(this)
+    GameMatch.initBoard()
+    GameMatch.phaseUi.init()
 
     // change turn player
     const keySpace = this.input.keyboard.addKey('Space')

@@ -7,7 +7,6 @@ import { CardHandle, CardObj } from '../cards/card'
 import { Board } from './board'
 import { Menu } from 'phaser3-rex-plugins/templates/ui/ui-components'
 
-// TODO: make hand zone
 export class Hand {
   // data: card index list
   cards: CardHandle[] = []
@@ -111,16 +110,6 @@ export class HandUi {
 
         // create action ui
         HandUiAction.createButtons(GameMatch.scene as Scenes.Match)
-
-        // TODO: make on card select action
-        // permanent
-        //   - normal summon
-        //   - special summon
-        //   - activate (hand)
-        //   - set
-        // spell, rune card
-        //   - activate (board or hand)
-        //   - set
       })
       // on card obj hover
       .on('pointerover', () => {
@@ -178,6 +167,15 @@ export class HandUiAction {
 
     // NOTE: https://codepen.io/rexrainbow/pen/KKopywp?editors=0010
     // TODO: make this list dynamically base on the card data
+    // actions:
+    // permanent
+    //   - normal summon
+    //   - special summon
+    //   - activate (hand)
+    //   - set
+    // spell, rune card
+    //   - activate (board or hand)
+    //   - set
     const items = [
       {
         name: 'summon',
@@ -202,6 +200,7 @@ export class HandUiAction {
       items: items,
       createBackgroundCallback: function(items: any) {
         const scene: Scenes.Match = items.scene
+        // TODO: make color module
         return scene.rexUI.add.roundRectangle(0, 0, 2, 2, 0, 0x212121)
       },
       createButtonCallback: function(item: any) {
@@ -233,7 +232,7 @@ export class HandUiAction {
     HandUiAction.menu
       .on('button.over', function(button: any) {
         HandUiAction.hovering = true
-        button.getElement('background').setStrokeStyle(1, 0xffffff)
+        button.getElement('background').setStrokeStyle(2, 0xffffff)
       })
       .on('button.out', function(button: any) {
         HandUiAction.hovering = false
@@ -275,7 +274,10 @@ export class HandUiAction {
 
     const handler = (x: number, y: number) => {
       // 0. pay its cost
-      // 1. TODO: remove this card from the hand
+
+      // 1. remove this card from the hand
+      GameMatch.hands[GameMatch.turnPlayer].remove(Selection.selected.cardObj[0].card.handle)
+      GameMatch.hands[GameMatch.turnPlayer].ui.updateLayout()
 
       // 2. negate summon trigger
       GameMatch.scene.events.emit('trigger.negateSummon')
@@ -289,7 +291,6 @@ export class HandUiAction {
       Selection.clearSelectCardObj()
       Selection.lockCardObj(false)
       Selection.lockTileFn(() => false)
-      GameMatch.hands[GameMatch.turnPlayer].ui.updateLayout()
       GameMatch.scene.events.removeListener('selection.select.tile', handler)
 
       // 4. on summon trigger

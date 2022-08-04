@@ -1,5 +1,5 @@
 export class Player {
-  index: number
+  id: number
   name: string
   states: {
     // TODO: make player states
@@ -8,8 +8,8 @@ export class Player {
     // - ...
   }
 
-  constructor(index: number, name: string) {
-    this.index = index
+  constructor(id: number, name: string) {
+    this.id = id
     this.name = name
   }
 }

@@ -20,13 +20,13 @@ export function loadImages(scene: Phaser.Scene) {
   )
 }
 
-export function createCard(index: number, name: string, owner: Player): Card {
+export function createCard(handle: number, name: string, owner: Player): Card {
   let card: Card = null
 
   switch (name) {
     case 'Battle Axe':
       card = new Card(
-        index,
+        handle,
         owner,
         CardTag.Commander,
         new CardData(
@@ -39,7 +39,7 @@ export function createCard(index: number, name: string, owner: Player): Card {
 
     case 'Patrick Fitzgerald':
       card = new Card(
-        index,
+        handle,
         owner,
         CardTag.Commander,
         new CardData(
@@ -52,7 +52,7 @@ export function createCard(index: number, name: string, owner: Player): Card {
 
     case 'Harry Lyons':
       card = new Card(
-        index,
+        handle,
         owner,
         CardTag.Creature,
         new CardData(
@@ -65,7 +65,7 @@ export function createCard(index: number, name: string, owner: Player): Card {
 
     case 'Chinese rooster':
       card = new Card(
-        index,
+        handle,
         owner,
         CardTag.Creature,
         new CardData(

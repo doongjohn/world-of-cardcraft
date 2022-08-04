@@ -19,7 +19,7 @@ export class Effect {
   // effect function
 }
 
-export type CardIndex = number
+export type CardHandle = number
 
 export enum CardTag {
   Commander,
@@ -75,7 +75,7 @@ export class CardData {
 }
 
 export class Card {
-  index: number
+  handle: number
   owner: Player
   tag: CardTag
   data: {
@@ -84,8 +84,8 @@ export class Card {
   }
   boardObjImageOffset: [x: number, y: number]
 
-  constructor(index: number, owner: Player, tag: CardTag, cardData: CardData, boardObjImageOffset: [x: number, y: number]) {
-    this.index = index
+  constructor(handle: number, owner: Player, tag: CardTag, cardData: CardData, boardObjImageOffset: [x: number, y: number]) {
+    this.handle = handle
     this.owner = owner
     this.data = { default: structuredClone(cardData), current: structuredClone(cardData) }
     this.data.default.controller = owner
@@ -250,7 +250,7 @@ export class BoardObj {
 
   updateVisual() {
     const background = this.container.getAt(0) as Phaser.GameObjects.Rectangle
-    if (this.card.owner.index == 0) {
+    if (this.card.data.current.controller.id == 0) {
       background.setFillStyle(0x323ea8)
     } else {
       background.setFillStyle(0xcc4e3d)

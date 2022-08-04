@@ -1,62 +1,70 @@
 import * as Game from '../game'
+import * as Scenes from '../scenes/match'
 import * as GameMatch from '../match'
 import * as Selection from './selection'
-import * as Scenes from '../scenes/match'
 import { Player } from '../player'
-import { CardIndex, CardObj } from '../cards/card'
-import { Menu } from 'phaser3-rex-plugins/templates/ui/ui-components'
+import { CardHandle, CardObj } from '../cards/card'
 import { Board } from './board'
+import { Menu } from 'phaser3-rex-plugins/templates/ui/ui-components'
 
 // TODO: make hand zone
 export class Hand {
   // data: card index list
-  cards: CardIndex[] = []
+  cards: CardHandle[] = []
   ui: HandUi
 
   constructor(owner: Player) {
     this.ui = new HandUi(owner)
   }
 
-  add(cardIndex: CardIndex) {
-    this.cards.push(cardIndex)
-    this.ui.add(cardIndex)
+  add(cardHandle: CardHandle) {
+    this.cards.push(cardHandle)
+    this.ui.add(cardHandle)
   }
 
-  remove(cardIndex: CardIndex) {
-    const arrayIndex = this.cards.indexOf(cardIndex)
+  remove(cardHandle: CardHandle) {
+    const arrayIndex = this.cards.indexOf(cardHandle)
     this.cards.splice(arrayIndex, 1)
-    this.ui.remove(cardIndex)
+    this.ui.remove(cardHandle)
   }
 }
 
 export class HandUi {
   owner: Player
   cardObjs: CardObj[] = []
-  baselineY: number
+  hovering: CardObj = null
+  baselineY = Game.h - 50
 
   constructor(owner: Player) {
     this.owner = owner
-    this.baselineY = Game.h - 50
 
     GameMatch.scene.input.on('gameout', () => {
-      if (GameMatch.turnPlayer != owner.index) return
+      if (GameMatch.turnPlayer != owner.id) {
+        return
+      }
       if (
         Selection.selected.cardObj.length == 0 ||
         !this.cardObjs.includes(Selection.selected.cardObj[0])
       ) {
-        this.update()
+        this.updateLayout()
       }
     })
 
     // reset selection when click empty space
     GameMatch.scene.input.on('pointerdown', () => {
-      if (GameMatch.turnPlayer != owner.index) return
-      const cardObjHoveringOrSelected =
-        Selection.selected.cardObj.length > 0 || this.cardObjs.includes(Selection.hovering.cardObj)
-      if (!cardObjHoveringOrSelected && !HandUiAction.hovering) {
+      if (GameMatch.turnPlayer != owner.id) {
+        return
+      }
+      if (!this.hovering && !HandUiAction.hovering) {
         Selection.clearSelectCardObj()
-        this.update()
+        Selection.lockCardObj(false)
+        Selection.lockTileFn(() => false)
+
+        this.updateLayout()
         HandUiAction.destroy()
+
+        // cancel all events
+        GameMatch.scene.events.removeAllListeners('selection.select.tile')
       }
     })
   }
@@ -68,21 +76,26 @@ export class HandUi {
 
     if (value) {
       // show
-      this.update()
+      this.updateLayout()
     } else {
       // hide
       HandUiAction.destroy()
     }
   }
 
-  add(cardIndex: CardIndex) {
-    const cardObj = new CardObj(GameMatch.scene, GameMatch.cards[this.owner.index][cardIndex])
+  add(cardHandle: CardHandle) {
+    // NOTE: (maybe) use object pooling
+    const cardObj = new CardObj(GameMatch.scene, GameMatch.cards[this.owner.id][cardHandle])
     cardObj.container.depth = 100
     cardObj.container
       .setSize(CardObj.size.x, CardObj.size.y)
       .setInteractive()
       // on card obj click
       .on('pointerdown', () => {
+        if (Selection.locked.cardObj) {
+          return
+        }
+
         // clear selected tile
         Selection.clearSelectTile()
         GameMatch.grid.updateVisual()
@@ -94,9 +107,9 @@ export class HandUi {
         }
 
         // trigger event
-        GameMatch.Events.handCardClick.emit('hand.card.click', cardObj)
+        GameMatch.scene.events.emit('hand.card.click', cardObj)
 
-        // action ui
+        // create action ui
         HandUiAction.createButtons(GameMatch.scene as Scenes.Match)
 
         // TODO: make on card select action
@@ -111,11 +124,16 @@ export class HandUi {
       })
       // on card obj hover
       .on('pointerover', () => {
+        this.hovering = cardObj
+        if (Selection.locked.cardObj) {
+          return
+        }
         Selection.hoverCardObj(cardObj)
         cardObj.y = this.baselineY - 60
       })
       // on card obj hover end
       .on('pointerout', () => {
+        this.hovering = null
         Selection.clearHoverCardObj()
         if (Selection.selected.cardObj[0] != cardObj) {
           cardObj.y = this.baselineY
@@ -123,18 +141,18 @@ export class HandUi {
       })
 
     this.cardObjs.push(cardObj)
-    this.update()
+    this.updateLayout()
   }
 
-  remove(cardIndex: CardIndex) {
-    const card = GameMatch.cards[this.owner.index][cardIndex]
+  remove(cardHandle: CardHandle) {
+    const card = GameMatch.cards[this.owner.id][cardHandle]
     const arrayIndex = this.cardObjs.findIndex((cardObj) => cardObj.card == card)
     this.cardObjs[arrayIndex].destroy()
     this.cardObjs.splice(arrayIndex, 1)
-    this.update()
+    this.updateLayout()
   }
 
-  update() {
+  updateLayout() {
     // TODO: calculate gap based on the max width
     const gap = 10
     const leftX = ((this.cardObjs.length - 1) / 2) * (CardObj.size.x + gap)
@@ -158,7 +176,7 @@ export class HandUiAction {
     HandUiAction.destroy()
     const cardObj = Selection.selected.cardObj
 
-    // https://codepen.io/rexrainbow/pen/KKopywp?editors=0010
+    // NOTE: https://codepen.io/rexrainbow/pen/KKopywp?editors=0010
     // TODO: make this list dynamically base on the card data
     const items = [
       {
@@ -175,6 +193,7 @@ export class HandUiAction {
       },
     ]
 
+    // create menu
     HandUiAction.menu = matchScene.rexUI.add.menu({
       x: cardObj[0].x,
       y: cardObj[0].y - 280,
@@ -205,10 +224,12 @@ export class HandUiAction {
       easeOut: 0,
     })
 
+    // position menu
     HandUiAction.menu.setAnchor({
       centerX: '0%+' + cardObj[0].x,
     })
 
+    // setup callback
     HandUiAction.menu
       .on('button.over', function(button: any) {
         HandUiAction.hovering = true
@@ -235,12 +256,6 @@ export class HandUiAction {
             break
         }
       })
-      .on('popup.complete', function() {
-        // console.log('popup.complete')
-      })
-      .on('scaledown.complete', function() {
-        // console.log('scaledown.complete')
-      })
   }
   static destroy() {
     if (HandUiAction.menu) {
@@ -249,33 +264,45 @@ export class HandUiAction {
   }
 
   static actionSummon() {
-    HandUiAction.menu.destroy()
-
-    // only empty tile can be selected
-    GameMatch.grid.setSelectable((x: number, y: number) => {
-      return !Board.at(x, y)
+    // TODO: make user unable to end turn
+    Selection.lockCardObj(true)
+    Selection.lockTileFn((x: number, y: number) => {
+      // only empty tile can be selected
+      return Board.at(x, y) != null
     })
 
-    // TODO: press esc to cancel summon
-    // TODO: make user unable to select or unselect cardObj
-    // TODO: make user unable to end turn
+    HandUiAction.menu.destroy()
 
     const handler = (x: number, y: number) => {
-      // TODO: (longterm) impl full summon sequence
-      // 1. send selected card to the limbo
+      // 0. pay its cost
+      // 1. TODO: remove this card from the hand
+
       // 2. negate summon trigger
-      // 3. actually summon (if negated send to the graveyard)
+      GameMatch.scene.events.emit('trigger.negateSummon')
+
+      // 3. actually summon
+      // if (negated) {
+      //   // add this card back to its hand
+      // }
       Board.createObj(x, y, Selection.selected.cardObj[0].card)
       Selection.clearHoverCardObj()
       Selection.clearSelectCardObj()
-      GameMatch.grid.setSelectableAll()
-      GameMatch.hands[GameMatch.turnPlayer].ui.update()
+      Selection.lockCardObj(false)
+      Selection.lockTileFn(() => false)
+      GameMatch.hands[GameMatch.turnPlayer].ui.updateLayout()
       GameMatch.scene.events.removeListener('selection.select.tile', handler)
+
       // 4. on summon trigger
+      GameMatch.scene.events.emit('trigger.onSummon')
     }
+
+    // register event
     GameMatch.scene.events.on('selection.select.tile', handler)
   }
+
   static actionSpecialSummon() {}
+
   static actionSet() {}
+
   static actionActivate() {}
 }

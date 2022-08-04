@@ -1,5 +1,17 @@
+import { tuplesEqual } from '../utils'
 import * as GameMatch from '../match'
+import { w, h } from './grid'
 import { CardObj, BoardObj } from '../cards/card'
+
+export const locked: {
+  cardObj: boolean
+  boardObj: boolean
+  tile: Set<string>
+} = {
+  cardObj: false,
+  boardObj: false,
+  tile: new Set(),
+}
 
 export const selected: {
   cardObj: CardObj[]
@@ -21,6 +33,11 @@ export const hovering: {
   tile: null,
 }
 
+export function clearLocked() {
+  locked.cardObj = false
+  locked.boardObj = false
+  locked.tile.clear()
+}
 export function clearSelected() {
   selected.cardObj = []
   selected.boardObj = []
@@ -32,7 +49,31 @@ export function clearHovering() {
   hovering.tile = null
 }
 
-// phaser events
+export function lockCardObj(lock: boolean) {
+  locked.cardObj = lock
+}
+export function lockBoardObj(lock: boolean) {
+  locked.cardObj = lock
+}
+export function lockTile(pos: [x: number, y: number], lock: boolean) {
+  if (lock) {
+    locked.tile.add(pos.join(','))
+  } else {
+    locked.tile.delete(pos.join(','))
+  }
+}
+export function lockTileFn(fn: (x: number, y: number) => boolean) {
+  for (let y = 0; y < h; ++y) {
+    for (let x = 0; x < w; ++x) {
+      lockTile([x, y], fn(x, y))
+    }
+  }
+}
+export function isTileLocked(pos: [x: number, y: number]) {
+  return locked.tile.has(pos.join(','))
+}
+
+// NOTE: phaser events
 // https://labs.phaser.io/edit.html?src=src/events/create%20event%20emitter.js&v=3.55.2
 
 export function selectCardObj(cardObj: CardObj) {
@@ -46,6 +87,12 @@ export function selectBoardObj(boardObj: BoardObj) {
 export function selectTile(x: number, y: number) {
   selected.tile.push([x, y])
   GameMatch.scene.events.emit('selection.select.tile', x, y)
+}
+export function isTileSelected(pos: [x: number, y: number]) {
+  for (const tile of selected.tile) {
+    if (tuplesEqual(tile, pos)) return true
+  }
+  return false
 }
 
 export function unselectCardObj(cardObj: CardObj) {
@@ -86,6 +133,13 @@ export function hoverTile(x: number, y: number) {
   hovering.tile = [x, y]
   GameMatch.scene.events.emit('selection.hover.tile', x, y)
 }
+export function isTileHovering(pos: [x: number, y: number]) {
+  if (tuplesEqual(hovering.tile, pos)) {
+    return true
+  } else {
+    return false
+  }
+}
 
 export function clearHoverCardObj() {
   hovering.cardObj = null
@@ -100,6 +154,6 @@ export function clearHoverTile() {
   GameMatch.scene.events.emit('selection.clearHover.tile')
 }
 
-// TODO: show selected obj data
-// show selected card obj data
-// show selected board obj data
+// TODO: show selected obj data (side panel)
+// - show selected card/board obj data
+// - user can change its data

@@ -163,14 +163,56 @@ export function setStep(value: Step) {
 }
 
 export class PhaseUi {
-  endPhaseLabel: Label
-  endPhaseButtons: Buttons
+  static currentPlayerLabel: Label
+  static currentPhaseLabel: Label
+  static endPhaseButton: Buttons
 
-  init() {
-    this.endPhaseLabel = this.createLabel()
-    this.endPhaseButtons = scene.rexUI.add
+  static init() {
+    PhaseUi.currentPlayerLabel = scene.rexUI.add
+      .label({
+        width: 100,
+        height: 40,
+        background: scene.rexUI.add.roundRectangle(0, 0, 0, 0, 0, 0x212121),
+        text: scene.add.text(0, 0, 'Turn player: ###', {
+          fontSize: '18px',
+        }),
+        space: {
+          left: 10,
+          right: 10,
+        },
+      })
+      .setAnchor({
+        top: '1%',
+        centerX: '50%',
+      })
+      .layout()
+    PhaseUi.updatePlayerText()
+
+    // show current phase
+    PhaseUi.currentPhaseLabel = scene.rexUI.add
+      .label({
+        width: 100,
+        height: 40,
+        background: scene.rexUI.add.roundRectangle(0, 0, 0, 0, 0, 0x212121),
+        text: scene.add.text(0, 0, 'Phase', {
+          fontSize: '18px',
+        }),
+        space: {
+          left: 10,
+          right: 10,
+        },
+      })
+      .setAnchor({
+        top: '5%',
+        centerX: '50%',
+      })
+      .layout()
+    PhaseUi.updatePhaseText()
+
+    // end phase
+    PhaseUi.endPhaseButton = scene.rexUI.add
       .buttons({
-        buttons: [this.endPhaseLabel],
+        buttons: [PhaseUi.createEndPhaseButton()],
         click: {
           mode: 'pointerup',
         },
@@ -183,9 +225,11 @@ export class PhaseUi {
 
     // NOTE: https://codepen.io/rexrainbow/pen/eYvxqLJ?editors=0010
     // buttons.setButtonEnable(false)
-    this.endPhaseButtons
+    PhaseUi.endPhaseButton
       .on('button.click', function() {
         nextPhase()
+        PhaseUi.updatePlayerText()
+        PhaseUi.updatePhaseText()
       })
       .on('button.over', function(button: any) {
         button.getElement('background').setStrokeStyle(2, 0xffffff)
@@ -194,7 +238,7 @@ export class PhaseUi {
         button.getElement('background').setStrokeStyle()
       })
   }
-  createLabel() {
+  static createEndPhaseButton() {
     return scene.rexUI.add.label({
       width: 100,
       height: 40,
@@ -207,6 +251,14 @@ export class PhaseUi {
         right: 10,
       },
     })
+  }
+  static updatePlayerText() {
+    PhaseUi.currentPlayerLabel.text = 'Turn player: ' + players[turnPlayer].name
+    PhaseUi.currentPlayerLabel.layout()
+  }
+  static updatePhaseText() {
+    PhaseUi.currentPhaseLabel.text = 'Phase: ' + Phase[phase]
+    PhaseUi.currentPhaseLabel.layout()
   }
 }
 export const phaseUi = new PhaseUi()

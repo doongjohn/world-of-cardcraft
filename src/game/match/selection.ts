@@ -1,7 +1,7 @@
 import { tuplesEqual } from '../utils'
-import * as GameMatch from '../match'
 import { w, h } from './grid'
 import { CardObj, BoardObj } from '../cards/card'
+import * as GameEvent from '../event'
 
 export const locked: {
   cardObj: boolean
@@ -78,15 +78,15 @@ export function isTileLocked(pos: [x: number, y: number]) {
 
 export function selectCardObj(cardObj: CardObj) {
   selected.cardObj.push(cardObj)
-  GameMatch.scene.events.emit('selection.select.cardObj', cardObj)
+  GameEvent.emit(GameEvent.Events.Selection_Select_CardObj, cardObj)
 }
 export function selectBoardObj(boardObj: BoardObj) {
   selected.boardObj.push(boardObj)
-  GameMatch.scene.events.emit('selection.select.boardObj', boardObj)
+  GameEvent.emit(GameEvent.Events.Selection_Select_BoardObj, boardObj)
 }
 export function selectTile(x: number, y: number) {
   selected.tile.push([x, y])
-  GameMatch.scene.events.emit('selection.select.tile', x, y)
+  GameEvent.emit(GameEvent.Events.Selection_Select_Tile, x, y)
 }
 export function isTileSelected(pos: [x: number, y: number]) {
   for (const tile of selected.tile) {
@@ -97,41 +97,35 @@ export function isTileSelected(pos: [x: number, y: number]) {
 
 export function unselectCardObj(cardObj: CardObj) {
   selected.cardObj.splice(selected.cardObj.indexOf(cardObj), 1)
-  GameMatch.scene.events.emit('selection.select.cardObj', cardObj)
+  GameEvent.emit(GameEvent.Events.Selection_Select_CardObj, cardObj)
 }
 export function unselectBoardObj(boardObj: BoardObj) {
   selected.boardObj.splice(selected.boardObj.indexOf(boardObj), 1)
-  GameMatch.scene.events.emit('selection.select.boardObj', boardObj)
+  GameEvent.emit(GameEvent.Events.Selection_Select_BoardObj, boardObj)
 }
 export function unselectTile(x: number, y: number) {
   selected.tile.splice(selected.tile.indexOf([x, y]), 1)
-  GameMatch.scene.events.emit('selection.select.tile', x, y)
+  GameEvent.emit(GameEvent.Events.Selection_Select_Tile, x, y)
 }
 
 export function clearSelectCardObj() {
   selected.cardObj = []
-  GameMatch.scene.events.emit('selection.clearSelect.cardObj')
 }
 export function clearSelectBoardObj() {
   selected.boardObj = []
-  GameMatch.scene.events.emit('selection.clearSelect.boardObj')
 }
 export function clearSelectTile() {
   selected.tile = []
-  GameMatch.scene.events.emit('selection.clearSelect.tile')
 }
 
 export function hoverCardObj(cardObj: CardObj) {
   hovering.cardObj = cardObj
-  GameMatch.scene.events.emit('selection.hover.cardObj', cardObj)
 }
 export function hoverBoardObj(boardObj: BoardObj) {
   hovering.boardObj = boardObj
-  GameMatch.scene.events.emit('selection.hover.boardObj', boardObj)
 }
 export function hoverTile(x: number, y: number) {
   hovering.tile = [x, y]
-  GameMatch.scene.events.emit('selection.hover.tile', x, y)
 }
 export function isTileHovering(pos: [x: number, y: number]) {
   if (tuplesEqual(hovering.tile, pos)) {
@@ -143,15 +137,12 @@ export function isTileHovering(pos: [x: number, y: number]) {
 
 export function clearHoverCardObj() {
   hovering.cardObj = null
-  GameMatch.scene.events.emit('selection.clearHover.cardObj')
 }
 export function clearHoverBoardObj() {
   hovering.boardObj = null
-  GameMatch.scene.events.emit('selection.clearHover.boardObj')
 }
 export function clearHoverTile() {
   hovering.tile = null
-  GameMatch.scene.events.emit('selection.clearHover.tile')
 }
 
 // TODO: show selected obj data (side panel)

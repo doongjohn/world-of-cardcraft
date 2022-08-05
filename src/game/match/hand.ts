@@ -1,6 +1,7 @@
 import * as Game from '../game'
 import * as Scenes from '../scenes/match'
 import * as GameMatch from '../match'
+import * as GameEvent from '../event'
 import * as Selection from './selection'
 import { Player } from '../player'
 import { CardHandle, CardObj } from '../cards/card'
@@ -63,7 +64,7 @@ export class HandUi {
         HandUiAction.destroy()
 
         // cancel all events
-        GameMatch.scene.events.removeAllListeners('selection.select.tile')
+        GameEvent.removeAllListeners(GameEvent.Events.Selection_Select_Tile)
       }
     })
   }
@@ -104,9 +105,6 @@ export class HandUi {
           cardObj.y =
             Selection.selected.cardObj[0] == cardObj ? this.baselineY - 60 : this.baselineY
         }
-
-        // trigger event
-        GameMatch.scene.events.emit('hand.card.click', cardObj)
 
         // create action ui
         HandUiAction.createButtons(GameMatch.scene as Scenes.Match)
@@ -280,25 +278,26 @@ export class HandUiAction {
       GameMatch.hands[GameMatch.turnPlayer].ui.updateLayout()
 
       // 2. negate summon trigger
-      GameMatch.scene.events.emit('trigger.negateSummon')
+      GameEvent.emit(GameEvent.Events.Trigger_NegateSummon)
 
       // 3. actually summon
       // if (negated) {
       //   // add this card back to its hand
       // }
       Board.createObj(x, y, Selection.selected.cardObj[0].card)
+
+      // 4. on summon trigger
+      GameEvent.emit(GameEvent.Events.Trigger_OnSummon)
+
       Selection.clearHoverCardObj()
       Selection.clearSelectCardObj()
       Selection.lockCardObj(false)
       Selection.lockTileFn(() => false)
-      GameMatch.scene.events.removeListener('selection.select.tile', handler)
-
-      // 4. on summon trigger
-      GameMatch.scene.events.emit('trigger.onSummon')
+      GameEvent.removeListener(GameEvent.Events.Selection_Select_Tile, handler)
     }
 
     // register event
-    GameMatch.scene.events.on('selection.select.tile', handler)
+    GameEvent.on(GameEvent.Events.Selection_Select_Tile, handler)
   }
 
   static actionSpecialSummon() {}

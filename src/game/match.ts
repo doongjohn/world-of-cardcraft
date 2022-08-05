@@ -1,6 +1,7 @@
 import * as Scenes from './scenes/match'
 import * as CardDB from './cards/card_db'
 import * as Grid from './match/grid'
+import * as GameEvent from './event'
 import { Player } from './player'
 import { Board } from './match/board'
 import { BoardObj, Card } from './cards/card'
@@ -140,7 +141,9 @@ export function skipPhase(value: Phase) {
 
 export function nextPhase() {
   // on phase end event
-  console.log('phase end: ' + Phase[phase])
+  GameEvent.emit(GameEvent.Events.Phase_End_Draw + phase)
+
+  // get next phase
   for (;;) {
     phase = (phase + 1) % 6
     if (skips.has(phase)) {
@@ -156,7 +159,7 @@ export function nextPhase() {
   }
 
   // on phase start event
-  console.log('phase start: ' + Phase[phase])
+  GameEvent.emit(GameEvent.Events.Phase_Start_Draw + phase)
 }
 export function setStep(value: Step) {
   step = value

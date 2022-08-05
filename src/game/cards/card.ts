@@ -91,9 +91,17 @@ export class Card {
     this.data.default.controller = owner
     this.data.current.controller = owner
     this.data.default.tag.add(tag)
-    this.data.current.tag.add(tag)
     Object.freeze(this.data.default)
+    this.data.current.tag.add(tag)
     this.boardObjImageOffset = boardObjImageOffset
+  }
+
+  takeDamage(amount: number) {
+    this.data.current.health -= amount
+  }
+  heal(amount: number) {
+    // NOTE: cap at max?
+    this.data.current.health += amount
   }
 }
 

@@ -43,10 +43,15 @@ export class Grid {
     for (let y = 0; y < h; ++y) {
       for (let x = 0; x < w; ++x) {
         this.grid[y][x]
-          .on('pointerdown', () => {
+          .on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             // check locked
             if (Selection.isTileLocked([x, y])) {
               return
+            }
+
+            // TODO: make board obj right click menu
+            if (pointer.rightButtonDown()) {
+              // right click
             }
 
             // unselect previous selected tiles

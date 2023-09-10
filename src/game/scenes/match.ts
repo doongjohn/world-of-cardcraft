@@ -18,6 +18,8 @@ export class Match extends Phaser.Scene {
   }
 
   create() {
+    this.input.mouse.disableContextMenu()
+
     GameMatch.initPlayers()
     GameMatch.initBoard()
     GameMatch.PhaseUi.init()

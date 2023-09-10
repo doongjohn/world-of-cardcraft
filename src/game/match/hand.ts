@@ -270,7 +270,8 @@ export class HandUiAction {
 
     HandUiAction.menu.destroy()
 
-    const handler = (x: number, y: number) => {
+    // register event
+    GameEvent.once(GameEvent.Events.Selection_Select_Tile, (x: number, y: number) => {
       // 0. pay its cost
 
       // 1. remove this card from the hand
@@ -293,11 +294,7 @@ export class HandUiAction {
       Selection.clearSelectCardObj()
       Selection.lockCardObj(false)
       Selection.lockTileFn(() => false)
-      GameEvent.removeListener(GameEvent.Events.Selection_Select_Tile, handler)
-    }
-
-    // register event
-    GameEvent.on(GameEvent.Events.Selection_Select_Tile, handler)
+    })
   }
 
   static actionSpecialSummon() {}
